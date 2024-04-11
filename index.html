@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports Distribution System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: lightblue;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: black;
+            text-align: center; 
+        }
+        .input-container {
+            margin-bottom: 10px;
+        }
+        #datepicker,
+        #statusFilter {
+            width: 150px;
+            padding: 8px;
+            border: 1px solid black;
+            border-radius: 5px;
+            background-color: #fff;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            background-color: #F2F2F2;
+        }
+        th {
+            background-color: lightblue;
+            color: white;
+        }
+        .endTime {
+            color: black;
+        }
+        .statusDone {
+            color: black;
+        }
+        .statusFail {
+            color: black;
+        }
+        .ui-datepicker {
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Reports Distribution System</h2>
+        <div class="input-container">
+            <input type="text" id="datepicker" placeholder="Select Date">
+        </div>
+        <div class="input-container">
+            <input type="text" id="statusFilter" placeholder="Search by Status">
+        </div>
+        <div class="input-container">
+            <button id="refreshButton">Refresh</button>
+        </div>
+        <br><br>
+        <table id="reportTable">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>As of Date</th>
+                    <th>Batch</th>
+                    <th>Status</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(function() {
+            function initializeDatepicker() {
+                $("#datepicker").datepicker({
+                    dateFormat: 'm/d/yy',
+                    onSelect: function(dateText, inst) {
+                        $(this).datepicker('setDate', new Date(dateText)); // Set selected date in datepicker
+                        filterTable(dateText);
+                    }
+                });
+            }
+
+            initializeDatepicker();
+
+            $('#datepicker').on('click', function() {
+                initializeDatepicker();
+            });
+
+            let currentBatch = 1;
+
+            function generateRandomValue(min, max) {
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+
+            function generateRandomStatus() {
+                return Math.random() < 0.5 ? 'Done' : 'Fail';
+            }
+
+            function clearReport() {
+                const tableBody = $('#reportTable tbody');
+                tableBody.empty(); // Clear existing rows
+            }
+
+            function generateReport(batchNumber) {
+                const tableBody = $('#reportTable tbody');
+                const currentTime = new Date();
+                const startTime = currentTime.toLocaleTimeString();
+                const asOfDate = $('#datepicker').val(); // Get the selected date
+                const statusFilter = $('#statusFilter').val();
+
+                for (let i = 0; i < Math.floor(Math.random() * 4) + 4; i++) {
+                    const task = `Task${tableBody.children().length + 1}`;
+                    const value = generateRandomValue(50, 100);
+
+                    const row = $('<tr>');
+                    row.html(`
+                        <td>${task}</td>
+                        <td>${asOfDate}</td> <!-- Set the as of date -->
+                        <td>Batch ${batchNumber}</td>
+                        <td></td> <!-- Empty status cell -->
+                        <td>${startTime}</td>
+                        <td class="endTime"></td>
+                        <td>${value}</td>
+                    `);
+                    tableBody.append(row);
+                }
+
+                updateEndTimes();
+            }
+
+            function updateEndTimes() {
+                const rows = $('#reportTable tbody tr');
+                const statusFilter = $('#statusFilter').val();
+
+                rows.each(function(index, row) {
+                    setInterval(() => {
+                        const endTimeCell = $(row).find('.endTime');
+                        const statusCell = $(row).find('td:eq(3)');
+                        const status = generateRandomStatus();
+                        const endTimeString = new Date().toLocaleTimeString();
+                        if (!statusFilter || status === statusFilter) {
+                            statusCell.text(status);
+                            statusCell.removeClass('statusDone statusFail');
+                            if (status === 'Done') {
+                                statusCell.addClass('statusDone');
+                            } else {
+                                statusCell.addClass('statusFail');
+                            }
+                        }
+                        if (!endTimeCell.text()) {
+                            endTimeCell.text(endTimeString);
+                        }
+                    }, 4 * 60000); // 4 minutes in milliseconds
+                });
+            }
+
+            function handleRefresh() {
+                currentBatch++;
+                generateReport(currentBatch);
+            }
+
+            $('#datepicker').on('change', function() {
+                clearReport();
+                currentBatch = 1;
+                generateReport(currentBatch); // Starting with batch 1
+            });
+
+            $('#statusFilter').on('change', function() {
+                const tableBody = $('#reportTable tbody');
+                tableBody.empty(); // Clear existing rows
+                generateReport(currentBatch); // Starting with current batch
+            });
+
+            $('#refreshButton').on('click', handleRefresh);
+
+            // Initial generation of report
+            generateReport(currentBatch); // Starting with batch 1
+
+            // Generate new batch every 5 minutes
+            setInterval(function() {
+                currentBatch++;
+                generateReport(currentBatch);
+            }, 5 * 60 * 1000); // 5 minutes in milliseconds
+        });
+    </script>
+</body>
+</html>
