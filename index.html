@@ -177,7 +177,7 @@
                         if (!endTimeCell.text()) {
                             endTimeCell.text(endTimeString);
                         }
-                    }, 4 * 60000); // 4 minutes in milliseconds
+                    }, 2 * 60000); // 4 minutes in milliseconds
                 });
             }
 
@@ -207,7 +207,7 @@
             setInterval(function() {
                 currentBatch++;
                 generateReport(currentBatch);
-            }, 5 * 60 * 1000); // 5 minutes in milliseconds
+            }, 3 * 60 * 1000); // 5 minutes in milliseconds
         });
     </script>
 </body>
